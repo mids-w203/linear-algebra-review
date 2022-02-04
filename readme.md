@@ -3,6 +3,7 @@
 |1/14/2022| WK 1,2 3 notes|
 |1/21/2022| WK 4,5 notes |
 |1/28/2022| Review of Test 1  and wk 5 reivew  |
+|2/4/2022 | WK 6, 7 notes.  Error, residual, variance of X, sample variance, variance of estimator and estimated variance of the estimator, variance and covariance matrix|
 
 [Calendar](https://mids-w203.github.io/syllabus/)
 
