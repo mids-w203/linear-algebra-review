@@ -1,5 +1,5 @@
 ---
-title: "Linear Algebra"
+title: "Linear Algebra review lecture note"
 author: "Bill Chung"
 date: \today
 output: pdf_document
