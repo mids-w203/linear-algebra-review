@@ -1,0 +1,1643 @@
+---
+title: "Linear Algebra"
+author: "Bill Chung"
+date: \today
+output: pdf_document
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE, warning=FALSE)
+```
+
+```{r include=FALSE}
+library(far)
+library(MASS)
+library(pracma)
+library(expm)
+library(wooldridge) #for sample data
+library(tidyverse)  #default tool kit
+library(patchwork)  #for graph
+library(kableExtra) #nice tables
+```
+
+# Welcome
+
+## House keeping
+
+- Please be on time and `turn your camera on`
+- Please free to ask questions any time.
+
+## Recommendd Books
+   
+- `Linear Algebra and its application` by David C.Lay 4th edition
+
+- Linear and Nonlinear Programming by Stephen G. Nash and Ariela Sofer
+
+- The fundamental theorem of linear algebra, Strang, Gilbert
+
+- if you can read Korean: [:LINK TO RIDI:](https://ridibooks.com/books/3780000146?_s=search&_q=%EB%B2%A1%ED%84%B0%EC%99%80+%EC%B9%9C%EA%B5%AC%EB%93%A4&_rdt_sid=search&_rdt_idx=0)
+   
+
+## Dancing with Wu Li Masters
+
+- `Young man, in mathmatics, you don't understand things. You just get used to them` by John Von Neumann from *Dancing with Wu Li Masters*
+
+Who is John Von Neumann?
+
+- [Leonoid Kantorovich](https://en.wikipedia.org/wiki/Leonid_Kantorovich) (1912 - 1986): `A new method of solving some classes of extrmal problems (1937)`
+- [George B. Dantzig](https://news.stanford.edu/news/2005/may25/dantzigobit-052505.html) (1914 - 2005) : `SIMPLEX (1947)`
+- [Jerzy Neyman](https://en.wikipedia.org/wiki/Jerzy_Neyman) (1894 - 1982) : `Confidence Interval, P-value`
+- [John Von Neumann](https://en.wikipedia.org/wiki/John_von_Neumann) : `The duality theorem (1947)` 
+
+\break 
+
+## Schedule
+
+|Week| Topic | Key concepts | 
+|:---:|:---:|---|
+|1    | Attributes and method of `vector` and `matrix` | see notes below |
+|2    | Slight detour to probabilities: Joint, conditional, marginal and Bayes formula. Markov chain, eigenvalue, eigenvectors| Linear combinations|
+|3    | What is rref(A) and what does it tell you about your matrix? | Basis, subspace, space, span, projection, inverse|
+|4    | Fundamental four subspaces of matrix.  Given a vector, can you find out where it `lives`?| Shall we span? |
+|5    | Projection, projection, projection | linear combination, change of basis |
+|6    | Findings vector multiplication that looks like projection | projection, orthogonal matrix, spanning Space |
+|7    | Change of basis and solving systems of equations  | matrix decomposition |
+|8    | It does not matter how slowly you move as long as you are making progress | eignevalue, eigenvector, Markov chain|
+|9    | Eignedecomposition |  eigenvalue, eigenvector, eigenspace, nullspace |
+|10   | Markov chain       | irreducible, reduccible, ergodic, regular, absorbing MC. What type of matrix do you have? |
+|11   | Singular value decomposition | SVD and PCA |
+|12   | Meeting matrix again |  PSD, PD, ID, NSD, ND, Condition number, symmetric matrix, gram matrix, diagonailzable matrix |
+|13   | SIMPLEX method and The duality theorem  | *The Martians* |
+
+
+\break
+
+# Notations
+
+$$\mathbb{A}\cdot \vec{x} = \vec{b}$$
+
+$$\vec{v}$$
+
+$$\mathbb{A}$$
+
+## vectors
+
+### Attribute
+
+- Size of a vector
+- Direction that it can `move`
+- Direction that it can `see` 
+- Norm
+- Subspace where it `lives`
+- Space where it `lives`
+
+### Method
+
+- Span
+- linear combination
+- transpose
+- dot product
+- projection
+
+## Space
+
+- Contains $\infty$ number of subspaces
+
+## Subspace
+
+- Created by spanning a vector or set of vectors
+- Always contains $\vec{0}$ and closed under `addition` and `multiplication`
+- basis
+- Has orthogonal complement subspace (`they are like best friends`)
+
+
+## matrix
+
+### Attribute
+
+- Dimension of matrix
+- Column Space, $C(\mathbb{A})$, Left Nullspace, $N(\mathbb{A}^T)$
+- Row Space, $R(\mathbb{A})$, Nullspace, $N(\mathbb{A})$
+- Input space (related to domain)
+- Output space (related to codomain and Range)
+- basis
+- eigenvalue, eignevector
+- singular value, singular vector 
+- condition number
+- Rank
+- PD, PSD, ID, ND, NSD
+- Rank-nullity theorem
+- inverse (not every square matrix has it..)
+- Gram matrix
+
+### method
+
+- transpose
+- inverse 
+- decomposition
+  - singular value decomposition
+  - eigen decomposition
+- projection
+- rref($\mathbb{A}$)
+
+## Solving systems of equations
+
+- Homogeneous equations
+- Homogeneous equations
+- Augmented matrix
+
+
+## How to create matrix and vector in R
+
+```{r}
+a1 <- matrix(c(3,0,-1,-5,2,4), nrow =1, byrow = T)
+
+a2 <- matrix(c(3,0,-1,5,2,4), nrow =1, byrow = T)
+
+A <- rbind(a1,a2)
+
+print(A)
+print(a2)
+```
+
+
+```{r}
+a1 <- matrix(c(3,0,-1,-5,2,4),nrow=1,byrow=T)
+print(a1)
+
+a2 <- matrix(c(3,0,-1,5,2,4),nrow=1,byrow=T)
+
+A <- rbind(a1,a2)
+print(A)
+```
+
+
+```{r}
+Rank(A)
+```
+
+\break
+
+# Definiations
+
+### Linear combination 
+
+$$\mathbb{A}\vec{x} = \vec{b}$$
+
+### Subspace
+
+- If $\vec{v}_1,..\vec{v}_p \in R^n$, then Span{$\vec{v}_1,..\vec{v}_p$} is called the subset of $R^n$ by these vectors.
+
+### Linear combination, Projection and transformation
+
+$$\mathbb{A}\vec{x} = \vec{b}$$
+
+## How to create a matrix 
+
+```{r}
+a1 <- matrix(c(3,0,-1,-5,2,4), nrow =1, byrow = T)
+
+a2 <- matrix(c(3,0,-1,5,2,4), nrow =1, byrow = T)
+
+A <- rbind(a1,a2)
+
+x <- c(5,-2,3,-2,5,-1.3)
+x
+
+b<- x/Norm(x)
+
+Norm(b)
+
+A%*%x
+```
+
+
+```{r}
+print(A)
+B <- A[,c(1,2,5)]
+D <- A[,-c(1,2,5)]
+
+B
+D
+```
+
+
+select columns 1, 3 and 6 and put them into $\mathbb{B}$  
+select columns 2, 4 and 5 and put them into $\mathbb{N}$
+
+
+```{r}
+B <- A[,c(1,3,6)]
+B
+```
+
+$$\mathbb{B} \cdot \vec{x}_B + \mathbb{N} \cdot \vec{x}_N = \mathbb{A}\cdot\vec{x}$$
+
+## Creating sample vector
+
+```{r}
+#randomly selects number
+a <- sample(-5:5, replace=TRUE, 12)
+#find out number of elements in the vector
+length(a)
+A <- matrix(a, ncol = 4, byrow= TRUE)
+A
+```
+
+```{r}
+A <- matrix(sample(-5:5, replace=TRUE, 12), ncol = 4, byrow= TRUE)
+A
+
+b <- matrix(sample(-5:5, replace=TRUE, 3), ncol = 1, byrow= TRUE)
+
+H <- cbind(A,b)
+rref(H)
+
+```
+
+- Go over solving systems of equations with $\inf$ solutions
+- How to pick one solution
+
+## Problems
+
+### example 1
+
+```{r}
+print(A)
+dim(A)
+Rank(A)
+
+a1 <- matrix(c(3,0,-1,-5,2,4), nrow =1, byrow = T)
+a2 <- matrix(c(3,0,-1,5,2,4), nrow =1, byrow = T)
+a3 <- matrix(c(3,0,-1,5,2,4), nrow =1, byrow = T)
+
+A <- rbind(a1,a2,a3)
+
+print(A)
+
+dim(A)
+
+rref(A)
+```
+
+```{r}
+B <- A[,c(1,4)]
+D <- A[,-c(1,4)]
+
+x <- c(1,2,5,-2.2,4,1)
+b <- A%*%x
+A%*%x
+```
+
+```{r}
+G <- t(B)%*%B
+invG <- inv(G)
+
+xB <- invG%*%t(B)%*%b
+
+B%*%xB
+
+```
+
+## problem to solve
+
+```{r}
+a1 <- matrix(c(3,0,-1,-5,2,4,5), nrow =1, byrow = T)
+a2 <- matrix(c(3,0,-1,5,2,4,3.5), nrow =1, byrow = T)
+a3 <- matrix(c(3,0,-1,5,2,4,-2.2), nrow =1, byrow = T)
+
+A <- rbind(a1,a2,a3)
+A
+
+x <- c(1,-2,3,5,-5.5,-1,3)
+b<- A%*%x
+```
+
+### steps using rref
+
+```{r}
+rref(A)
+```
+
+### break A in to B and D
+
+```{r}
+B <- A[,c(1,4,7)]
+D <- A[,-c(1,4,7)]
+
+G <- t(B)%*%B
+invG <- inv(G)
+
+xB <- invG%*%t(B)%*%b
+
+B%*%xB
+A%*%x
+```
+
+
+### find xB
+
+### shows Ax BxB are the same
+
+$$ \mathbb{A}\vec{x} = \mathbb{B}\vec{x}_B$$
+
+
+# Conditional Probablity example
+
+## from live sectoin note in wk2
+
+In each week of a class, you are either caught up or behind.
+
+- The probability that you are caught up in Week 1 is 0.7. 
+- If you are caught up in a given week, the probability that you will be caught up in the next week is 0.7. 
+- If you are behind in a given week, the probability that you will be caught up in the next week is 0.4. 
+- **What is the probability that you are caught up in week 3?**
+
+- `Identify as many ways to improve this proof as you can`:
+
+## Conditional probability with not so good notation
+
+- If you are caught up in a week, there are two possibilities for the previous week: caught up and behind. 
+- Let $P(X)$ be the probability of being caught up.  
+  - In week 1, the probability of being caught up $P(X) = .7$.  
+  - In week 1, the probability of being behind is $P(Y) = 1 - .7 = .3$.  
+
+- We first break down the probability for week 2:
+$$P(X) = .7 \cdot .7 + .3 \cdot .4 = .61$$
+
+Now we can repeat the process for week 3:
+
+$$P(X) = .61 * .7 + .39 * .4 = .583$$
+
+
+- Let $C_i$ be the event that you are caught up in week $i$.
+  - Given: 
+    - $P(C_1) = 0.7$ 
+    - $P(C_{i+1}|C_{i}) = 0.7$
+    
+- Let $C_i^C$ be the event that you are behind in week $i$
+    - $P(C_{i+1}|C_i^C) = 0.4$. 
+    
+
+- `For week 2`, we can partition the sample space into $\{C_1, B_1 \}$ and apply the law of total probability:
+
+$$\begin{aligned}
+P(C_2) &= P(C_1)P(C_2|C_1) + P(B_1)P(C_2|B_1) \\
+       &= 0.7 \cdot 0.7 + 0.3 \cdot 0.4 = 0.61
+\end{aligned}$$
+
+- Next, repeat the process for `week 3`:
+
+$$\begin{aligned}
+P(C_3) &= P(C_2)P(C_3|C_2) + P(B_2)P(C_3|B_2) \\
+       &= 0.7 \cdot 0.61 + 0.39 \cdot 0.4 = 0.58
+\end{aligned}$$
+
+## Solving it using R
+
+- You can write a function in R and solve it
+
+```{r echo=FALSE, fig.height=4, fig.width=4}
+caught_up <- function(weeks){
+  ## we're going to hard-code the probabilities in here
+  ## they could be taken as an argument if you wanted to generalize this 
+  prob <- c(.7, rep(NA, weeks-1))
+  week <- 1
+  
+  while(week < weeks) {
+    prob[week+1] <- 0.7 * prob[week] + .4 * (1-prob[week])
+    week <- week + 1
+  }
+
+  return(prob)
+}
+
+prob_caught_up <- caught_up(14)
+plot(
+  x = 1:length(prob_caught_up), y = prob_caught_up, 
+  ylim = c(0.4, 0.8), 
+  type = 'b', pch = 19, 
+  xlab = 'Number of Weeks', ylab = 'P(Caught Up)', 
+  main = 'Probability of Being Caught Up')
+```
+
+## Solving it using matrix
+
+Given:
+  - The probability of getting caught up with homework in this week only depends on the the outcome of the previous period.
+
+- The transition matrix, $\mathbb{P}$, has nonzero values such that it is `regular` 
+
+- Since  $\mathbb{P}$ is regular, it has limiting matrix
+
+| | $C_i$ | $C_i^C$|
+|:-:|:-:|:-:|
+|$C_{i+1}$|0.7|0.4|
+|$C_{i+1}^C$|||
+
+- Above matrix contains the given information:
+- Let $C_i$ be the event that you are caught up in week $i$.
+    - $P(C_{i+1}|C_{i}) = 0.7$
+- Let $C_i^C$ be the event that you are behind in week $i$
+    - $P(C_{i+1}|C_i^C) = 0.4$. 
+
+- Then, we can fill in the blank:
+
+| | $C_i$ | $C_i^C$|
+|:-:|:-:|:-:|
+|$C_{i+1}$|0.7|0.4|
+|$C_{i+1}^C$|`0.3`|`0.6`|
+
+And if we multiply the above matrix by the initial state vector, see what you get
+
+$$[0.7, 0.3]^T$$
+
+```{r}
+
+P <- matrix(c(0.7,0.4,0.3,0.6), nrow=2, byrow =T)  
+print(P)
+
+print(P%^%2)
+
+print(P%^%1000)
+```
+
+## Solving it using eigenvalue
+
+- Will talk about this more later in the class
+
+
+```{r}
+######################
+# Using eignevalues
+######################
+myeigen <- eigen(P)    #gets you the eigenvalues and eigenvectors
+
+## getting the eigenvalues and eigenvectors into vector and matrix.
+
+lambda <- myeigen$values   #eigenvalues
+
+E <- myeigen$vectors     #corresponding eigenvectors
+
+print(lambda)
+print(E)
+
+p_vector <- function(x){
+y <- sum(abs(x))
+x <- abs(x)/y
+return(x)
+}
+
+#converting the eigenvector corresponding to eigenvalue = 1
+p_vector(E[,1])
+```
+
+\break
+
+# Space and subspace
+
+- Domain, codomain (Range, C($\mathbb{A}$))
+
+## Domain, codomain, Range
+
+- You will see the following notation from time to time
+
+$$T: R^n \rightarrow R^m $$
+
+- the above notation is saying that `matrix T will be used to multiply vector with size of n and the resulting vector will have size m`
+
+- And we will get into the details later.
+
+- Vector resize within a space which consist of so many subspaces.
+
+- When you put vectors into a matrix, you get two space, I call them `input` and `output space`.  Input space can be divided into `row space` and `nullspace`, and `output space` can be divided into `column space` and `left null space`
+
+- Think of domain as `row space` and `codomain` as `output space` and `range` as `column space`
+
+## Rank nullity theorem
+
+If $\mathbb{A}$ has $n$ columns, then $\text{Rank}(\mathbb{A}) + \text{dim Nul}(\mathbb{A}) = n$
+
+- see page 156 for the invertible matrix theorem (continued)
+
+## Invertible Linear Transformation
+
+- A linear transformation $\mathbb{T}: R^n \rightarrow R^n$ is said to be `invertible` if there exists a funciton $\mathbb{S}: R^n \rightarrow R^n$ such that 
+
+$$\begin{aligned}
+\mathbb{S}(\mathbb{T}(\vec{x}))= \vec{x} \text{ for all }\vec{x}\text{ in } R^n \\
+\mathbb{T}(\mathbb{S}(\vec{x}))= \vec{x} \text{ for all }\vec{x}\text{ in } R^n \\
+\end{aligned}$$
+
+<br><br>
+where dim($\mathbb{A}$) = n by n, $\vec{x}, \vec{b} \in R^n$
+- $\mathbb{A}$ is the standard matrix for $\mathbb{T}$
+$$\mathbb{A}\vec{x}=\vec{b}$$
+
+- $\mathbb{A}^{-1}$ is the standard matrix for $\mathbb{S}$
+$$\mathbb{A}^{-1}\vec{b}=\vec{x}$$
+
+```{r}
+r1 <- c(0,1,-4)
+r2 <- c(2,-3,2)
+r3 <- c(5,-8,9)
+A <- rbind(r1,r2,r3)
+print(rref(A))
+```
+- Above matrix is invertible matrix based on `rref()`
+- Inverse transformation `undo` the transformation
+
+```{r}
+x <- c(3,6,9)
+
+#to use the same notation
+T <- A
+b<- T%*%x
+print("Before the transformation")
+print(x)
+print("After the transformaiton")
+print(T%*%x)
+```
+
+## When $\mathbb{A}$ is not a square matrix
+
+- With respect to $\mathbb{A}$, $\vec{b}$ is in your `range` and $\vec{x}$ is in `domain`.
+
+- $\mathbb{A}$ transform vectors in domain to range.
+- $\mathbb{A}^{-1}$ can transform values in range back to domain, when the $\mathbb{A}$ involved 1-1 transformation.
+
+```{r}
+#chapter 1.1 example 3
+
+r1 <- c(0,3,-6,6,4,-5)
+r2 <- c(3,-7,8,-5,8,9)
+r3 <- c(3,-9,12,-9,6,15)
+
+A <- rbind(r1,r2,r3)
+
+rref(A)
+```
+
+\break
+
+## Group exercise or Homework
+
+- Break out session.  
+
+### Part 1 (10 min)
+
+(1) Create 3 by 3 nonsingular matrix, and call it $\mathbb{A}$
+
+- What is the rank of $\mathbb{A}$
+
+(2) Create 3 by 3 singular matrix and call it $\mathbb{F}$
+
+- What is the rank of $\mathbb{F}$
+
+(3) Can you express $\vec{v}_1$ = [ 6 4 1] as a linear combination of $\mathbb{A}$ or $$\mathbb{F}$$
+If not, what is the closest value you can express?  How do you know?
+
+
+
+### Part 2 (15 min)
+
+(1) 3 by 10 matrix given below and convert it to rref
+
+```{r}
+set.seed(100)
+A <- matrix(rnorm(30),ncol = 10)
+print(A)
+
+Rank(A)
+```
+
+(2) Identify multiple basis (i.e., set of basis vectors that can span $C(\mathbb{A}))$
+
+(3) Find 5 different solution to [6 2.5 3]
+
+
+### Part 3 (5 min)
+
+(1) Identify column and row rank of the following matrix
+
+```{r}
+set.seed(100)
+A <- matrix(rnorm(10),ncol = 2)
+print(A)
+Rank(A)
+```
+
+(2) Is the following vector in the span of C($\mathbb{A}))$?
+
+```{r}
+set.seed(110)
+v1 <- matrix(rnorm(5),ncol = 1)
+print(v1)
+
+Ab <- cbind(A,v1)
+Rank(Ab)
+```
+
+(3)
+
+- see page 173 for adding $\mathbb{I}$
+
+```{r}
+set.seed(100)
+A <- matrix(rnorm(18),nrow=3)
+print(A)
+
+Rank(A)
+rref(A)
+Rank(t(A))
+AT <- t(A)
+print(AT)
+rref(AT)
+
+B <- A[,c(1,2,3)]
+D <- A[,-c(1,2,3)] 
+
+nullspace <- -inv(t(B)%*%B)%*%t(B)%*%D
+I <- diag(3)
+nullspace <- rbind(nullspace,I)
+
+dim(nullspace)
+
+round(A%*%nullspace,2)
+```
+
+
+\break
+
+# Fundamental four subspaces
+
+
+## Fundamental four subspaces of Matrix
+
+- $R(\mathbb{A}), N(\mathbb{A}), C(\mathbb{A}), N(\mathbb{A}^T)$
+
+
+## Column space basis
+
+### use rref($\mathbb{A}$)
+
+```{r}
+A = matrix(c(-3,6,-1,1,-7,1,-2,2,3,-1,2,-4,5,8,-4),nrow=3,ncol=5,byrow=TRUE)
+print(A)
+
+dim(A)
+
+Rank(A)
+
+rref(A)
+```
+
+```{r}
+b1 <- c(9,4,3)
+
+Ab <- cbind(A,b1)
+Rank(Ab)
+
+B <- A[,c(1,3)]
+N <- A[,-c(1,3)]
+
+B
+N
+
+#BXb + NXn = B1
+
+G <- (t(B)%*%B)
+
+#B^T*B*Xb  = B^T*B1
+#inv(G)B^T*B*Xb  = inv(B)*B^T*B1
+#Xb
+
+## estimated coefficients
+x_hat<- inv(G)%*%t(B)%*%b1
+x_hat
+## estimated value
+B%*%x_hat
+
+#using all features
+x <- c(x_hat[1],0,x_hat[2],0,0)
+A%*%x
+```
+
+$$\mathbb{A}\vec{X} = \vec{b}_1$$
+
+```{r}
+library(wooldridge)
+wooldridge::hprice1
+
+library(tidyverse)
+glimpse(hprice1)
+
+mod1 <- lm(price ~ lotsize + sqrft, data = hprice1)
+summary(mod1)
+
+round(mod1$coefficients,2)
+
+
+head(hprice1)
+
+B <- as.matrix(hprice1[,c(4,5)])
+B <- cbind(1,B)
+class(B)
+
+#gram matrix
+G <- t(B)%*%B
+
+xb <- inv(G)%*%t(B)%*%hprice1$price
+xb
+
+#last line
+#residual is always orthogonal to features you have in your dataset.
+round(B[,c(2)]%*%mod1$residuals,3)
+
+#error and residual 
+```
+
+
+## Codomain
+
+- `column space` + `left nullspace`
+- column space (range) is $\mathbb{R}^3$
+
+### use orth()
+
+```{r}
+C_A = orth(A)
+C_A
+```
+
+### Left Nullspace($\mathbb{A}^T$)
+
+```{r}
+N_AT <- null(t(A))
+N_AT
+```
+
+### Basis for output space
+
+```{r}
+OUT <- cbind(C_A, N_AT)
+rref(OUT)
+```
+
+## Row space basis 
+
+### Using transformation
+
+### using orth()
+
+```{r}
+C_AT <- orth(t(A))
+C_AT
+```
+
+## Nullspace basis
+
+- Suppose $T(\vec{x}) = A\vec{x}$, then the ```kernel``` or null space of such T can be found as below.
+
+### using nullspace()
+
+```{r}
+N_A <- nullspace(A)
+N_A
+```
+
+## Basis spanning the input space
+
+```{r}
+IN <- cbind(C_AT, N_A)
+IN
+```
+
+
+- Suppose we have $\vec{H}=[a-3b,b-a,a,b]^T$, this can be written as linear combination of two vectors $a\vec{v}_1$ and $b\vec{v}_2$ where $\vec{v}_1 = [1,-1,1,0]$ and $\vec{v}_2 = [-3,1,0,1]$.
+
+- This is very useful technique of expressing a subspace of $\vec{H}$ as the linear combination of some small collectoin of vectors.
+
+- Subspace of $\vec{H} \in$ Span{$\vec{v}_1, \vec{v}_2$}
+
+## How to find the basis of null space
+
+- Step 1: Given $\mathbb{A}$, find its `rref`
+- Step 2: Solve for $\vec{x}$ in $\mathbb{A}\vec{x}=\vec{0}$
+- Step 3: express $\vec{x}$ as linear combination of smaller vectors.
+- Step 4: identify basis spanning the null space
+
+```{r}
+r1 <- c(-3,6,-1,1,-7)
+r2 <- c(1,-2,2,3,-1)
+r3 <- c(2,-4,5,8,-4)
+
+A <- rbind(r1,r2,r3)
+
+rref(A)
+```
+
+```{r}
+n1 <- c(2,1,0,0,0)
+n2 <- c(1,0,-2,1,0)
+n3 <- c(-3,0,2,0,1)
+
+#########################################
+# Any vector in the null space with A
+#########################################
+
+print(A%*%n1)
+print(A%*%(n1+n2+n3))
+print(round(A%*%(100*n1+0.1*n2-305*n3),3))
+```
+
+\break
+
+## Group exercise or Homework
+
+- Get 5 matrices from class 
+- Given a matrix and a vector, 
+
+(1) find out where the vector lives
+  - Space and subspace
+  
+(2) basis of the subspace
+(3) Provide a vector that is not in the span of these two subspaces
+
+
+## Concept check questions
+
+- What is the relationship between $C(A)$ and $N(A^T)$?
+
+- What is the relationship between $R(A)$ and $N(A)$?
+
+- What is the relationship between $C(A)$ and $R(A)$?
+
+- What is the relationship between $N(A)$ and $N(A^T)$?
+
+- If the basis spanning $C(A)$ are given, can you find out the basis
+spanning $N(A^T)$?
+
+- If the basis spanning $R(A)$ are given, can you find out the basis
+spanning $N(A^T)$?
+
+\break
+
+# Projection matrix
+
+## Review  
+
+- Given: Suppose $A\in R^{nxn}$ and $A^{-1}$ exist, then the following can be said
+   - The columns of $A$ is the basis of $R^{n}$
+   - rank $A$ = n
+   - $Nul A=$ {$\vec{0}$}
+   - dim $Nul A$ = 0
+   - $A^{-1}A=I$
+   - $AA^{-1}=I$
+   - The Linear transformation $\vec{x} \mapsto A\vec{x}$ is one-to-one
+   - $A^T$ is an invertible matrix
+
+### Space, subspace, orthogonal complement subspace 
+
+- Let $S$ be space of $R^n$, $A$ is $R^{mxn}$ matrix. 
+- Let $C(A)$ and $N(A^T)$ be the column space and left nullspace of $A$
+- $C(A)$ and $N(A^T)$ are orthogonal complement subspace of each other.
+- Then, any vector, $\vec{x} \in S$ but $\vec{x} \notin C(A) \text{ or } \vec{x} \notin N(A^T)$ <br>
+can be expressed by the linear combination of basis of $C(A) \text{ and } N(A^T)$
+
+### Change of basis 
+
+Given:  $\vec{y} \notin C(A)$ , and Rank of $A$ = 2, and $\vec{y} \in R^3$
+
+### Problem 1  
+- Let $\hat{\vec{y}} \subset C(A)$ where $\vec{C}_1 \text{ and } \vec{C}_2$ are the basis of $C(A)$
+- Find $\hat{\vec{y}}$ that minimizes $||\vec{y}-\hat{\vec{y}}||$
+
+
+### Solution:
+- let $C$ and $N$ be the matrix that contains the basis of $C(A)$ and $N(A^T)$
+- Since: $C\vec{x}=\hat{\vec{y}} \text{   and   } C\vec{x} + N\vec{z} = \vec{y}$
+- Simplify the expression
+
+$$\begin{aligned}
+C^TC\vec{x} &= C^T\vec{y} \\
+\vec{x} &= (C^TC)^{-1}C^T\vec{y} 
+\end{aligned}$$
+
+- Then, 
+
+$$C(C^TC)^{-1}C^T\vec{y}=\hat{\vec{y}}$$
+
+- $C(C^TC)^{-1}C^T$ is called **projection matrix***
+
+
+$$\mathbb{A}$$
+
+$$\hat{\vec{b}}$$
+$$\begin{aligned}
+\mathbb{A}\dot\ \vec{x} &=\vec{b} \\
+\mathbb{B}\dot\ \vec{x}_{B} + \mathbb{D}\dot\ \vec{x}_{D} &=\vec{b} \\
+\end{aligned}$$
+
+\break
+
+## Projection matrix
+
+$$\begin{aligned}
+ \mathbb{I}  &= \mathbb{P} + \mathbb{B} \\
+\vec{y} &= \mathbb{P}\vec{y} + \mathbb{B}\vec{y}\\
+\end{aligned}$$
+
+
+- where  $P \text{ and } B$ are the ```projection matrices``` for $C(A) \text{ and } N(A^T)$
+
+
+### Example 
+
+
+```{r}
+A <- matrix(c(1,1,2,-1,3,3,1,2,4), nrow = 3, byrow=TRUE)
+print(A)
+
+Rank(A)
+dim(A)
+
+b <- c(1,4,-4)
+
+
+x <- inv(A)%*%b
+
+A%*%x
+```
+
+
+
+## DOT Product  
+
+$$\hat{\vec{y}} = P_{\vec{u}}^{\vec{y}} = \frac{\vec{y}\centerdot\vec{u}}{\vec{u}\centerdot\vec{u}}\vec{u}$$
+
+where 
+
+$\vec{y}\centerdot\vec{u} \text{ and } \vec{u}\centerdot\vec{u}$ are scalar quantity.
+
+Projection tells you the ```length``` of the ```projected vector```, $\hat{\vec{y}}$ in terms of the vector that is ```being projected onto``` $\vec{u}$
+
+
+```{r}
+# y will be projected onto u
+y <- matrix(c(7,6),nrow=2)
+u <- matrix(c(4,2),nrow=2)
+u0 <- matrix(c(16,8),nrow=2)
+```
+
+### Using projection matrix
+
+```{r}
+## using projection matrix
+P <- u%*%(solve(t(u)%*%u)%*%t(u))
+print(P)
+print(P%*%y)
+```
+
+### Using Projection formula on to $\vec{u}$
+
+```{r}
+print(drop((t(y)%*%u)/(t(u)%*%u))*u)
+print(drop((t(y)%*%u)/(t(u)%*%u)))
+```
+
+### Using Projection formula on to $\vec{u}_0$
+
+```{r}
+print(drop((t(y)%*%u0)/(t(u0)%*%u0))*u0)
+print(drop((t(y)%*%u0)/(t(u0)%*%u0)))
+```
+
+
+## Orthogonal 
+
+- Two vectors  $\vec{v_1}$ and $\vec{v_2} \in R^m$ are orthogonal, if $\vec{v_1} \centerdot \vec{v_2}=0$
+- Note that the dot product produce scalar quantity 0 not $\vec{0}$
+
+- Notice $\vec{v}_1$ is size of 3 vector and `orth( )` returns normalized $\vec{v}_1$
+
+```{r}
+v1 <- c(3,4,5)
+```
+
+### Orthonormal basis
+
+```{r}
+mybasis <- matrix(c(1,2,3,4,5,6),nrow=3)
+print(mybasis)
+print(orthonormalization(mybasis))
+Z <- (orthonormalization(mybasis)) 
+# z is orthonormal basis of codomain (I called it output space)
+
+A <- matrix(c(4,3,5,6,8,10,5,12,13),nrow=3, byrow=T)
+print(A)
+
+c(Norm(A[1,]),Norm(A[2,]),Norm(A[3,])) #norm of each row vectors in A (i.e., sample)
+
+B <- A%*%Z
+print(B)
+
+print(Z)
+```
+
+### Explain the following
+
+```{r}
+print(Z%*%B[1,])
+print(Z%*%B[2,])
+print(Z%*%B[3,])
+```
+
+
+### Normalizing the basis
+
+```{r}
+c_A <- orth(v1)
+print(c_A)
+```
+
+```{r}
+#notice what happens when you dot v1 and c_A
+print(v1%*%c_A)
+```
+
+```{r}
+Norm(v1)
+```
+
+###  Diagonal matrix 
+
+```{r}
+D1 <- diag(c(5,2,10),3,3)
+print(D1)
+```
+
+```{r}
+print(inv(D1)) #notice when the diagonal elements has zero in it, D1 becomes singular.
+```
+
+```{r}
+print(D1 %^% 3) # using the function in expm
+```
+
+## Orthogonal matrix 
+
+$$U^{-1} = U^T$$
+
+- Let $W$ be a subspace of $R^n$ and let $\vec{y} \in R^n$ but $\vec{y} \notin W$.  
+- Then, $\hat{\vec{y}} \in W$ that is the closest approximation of $\vec{y}$ is the $\vec{y}$ projected onto $W$
+
+### Proerty of matrx that is not square, but has orthonormal basis
+
+```{r}
+v <- matrix(c(2,1,2),nrow=3)
+O <- orthonormalization(v)
+print(O)
+```
+
+```{r}
+U <- cbind(O[,1],O[,2])
+print(t(U)%*%U)
+```
+
+Suppose $C$ is matrix that contains orthonormal basis of $W$.  Since there exist $\vec{y} \notin W$, $C$ can't be square matrix. <br>
+
+However, the basis in $C$ can still be ```orthonormal```.  <br>
+
+Let $C$ be retangular matrix with orthonormal basis,
+
+$$\vec{y} = C\vec{x}_w + N\vec{x}_N$$ 
+where 
+- $N$ is the basis spanning orthogonal complement subspace of $W$. Then,<br><br>
+ $$C^{T}\vec{y} = C^TC\vec{x}_w$$ <br>
+ 
+Since $C$ is matrix that contains orthonormal basis, $C^TC$ becomes identify matrix. <br><br>
+$$C^{T}\vec{y} = \vec{x}_W $$ <br>
+Now, the location of $\hat{\vec{y}}$ in terms of the basis in $C$ can be expressed as below <br>
+$$C\vec{x}_W = \hat{\vec{y}}$$ <br>
+
+Solving for $\vec{x}_W$
+$$\vec{x}_W = C^T\hat{\vec{y}}$$<br>
+
+Sub the above expression of $\vec{x}_W$ to the following equation
+
+$$C^{T}\vec{y} = C^TC\vec{x}_w$$ <br>
+
+$$C^{T}\vec{y} = C^TC(C^T\hat{\vec{y}})$$ <br>
+
+Then,
+
+$$CC^T\vec{y} = \hat{\vec{y}}$$
+
+### Gram-Schmidt Process
+
+- Let {$\vec{x}_1,\vec{x}_2...\vec{x}_p$} be basis for a nonzero subspace $W$ of $R^n$ where $p < n$. <br><br>
+Gram-Schimidt process converts {$\vec{x}_1,\vec{x}_2...\vec{x}_p$} to  {$\vec{v}_1,\vec{v}_2...\vec{v}_p$} where  {$\vec{v}_1,\vec{v}_2...\vec{v}_p$} are orthogonal basis for $W$ <br><br>
+
+
+- Gram-Schimit process is projecting one set of basis to another basis that is orthogonal to them. <br><br>
+
+
+- Notice the `orthonormalization( )` in `R` returns 3 x 3 matrix.  This function in R returns the basis spanning the subspace that is orthogonal to subspace spanned by $\vec{v}_1$ 
+
+```{r}
+GS <- orthonormalization(v1)
+print(GS)
+```
+
+
+[Gram-Schmidt](https://cran.r-project.org/web/packages/matlib/vignettes/gramreg.html)
+
+
+\break
+
+## Group exercise or Homework
+
+### Gram-Schmidt Process
+
+```{r}
+set.seed(100)
+
+A <- matrix(rnorm(10), ncol = 2)
+A
+```
+
+- Perform gram schmit process and explain the result
+
+
+### Find the basis spanning the four subspaces using R built-in function
+
+```{r}
+r1 <- c(1,3,4,5,6)
+r2 <- c(1,5,4,5,3)
+r3 <- c(1,-2,4,7,6)
+
+A <- cbind(r1,r2,r3)
+print(A)
+```
+
+### Find the basis spanning the nullspace without using R built-in function
+
+- You can use `rref()`
+
+\break
+
+# Projection and MLE
+
+```{r}
+#6.2 Example 1
+u1 <- c(3,1,1)
+u2 <- c(-1,2,1)
+u3 <- c(-0.5, -2, 7/2)
+
+print(t(u1)%*%u2)
+print(t(u3)%*%u2)
+print(t(u1)%*%u3)
+```
+
+
+```{r}
+#page 399, example 2
+y <- c(6,1,-8)
+
+A <- cbind(u1,u2,u3)
+print(A)
+```
+
+- is $\vec{y}$ in $C(\mathbb{A})$?
+
+```{r}
+Rank(A)
+```
+
+Since $\mathbb{A}$ is full rank, we can get $\mathbb{x}$ the following way
+
+```{r}
+x <- inv(A)%*%y
+print(A%*%x)
+print("++++++++++++++++++++++++++++++++++")
+
+############################################
+# PROJECTION
+############################################
+
+# since each column vector of A are orthogonal we can use projection
+# as well
+x1 <- y%*%u1/(Norm(u1)^2)
+x2 <- y%*%u2/(Norm(u2)^2)
+x3 <- y%*%u3/(Norm(u3)^2)
+
+# then using these coordinate you can get the following result as well
+x <- c(x1, x2, x3)
+print(A%*%x)
+```
+
+## Orthogonal projection
+
+- Very important concept and may take a few days of practice. 
+
+- see page `340`.
+
+- Suppose you have $\vec{u}$ and denote its subspace by $L$, and you have $\vec{y}$ that is not in the span of $\vec{u}$
+
+### projecting $\vec{y}$ onto $L$
+
+$$\text{proj}_L\vec{y}= \hat{y} = \frac{\vec{y}\vec{u}}{\vec{u}\vec{u}}\vec{u}$$
+
+```{r}
+# Example 3 (see slide 8)
+y <- c(7,6)
+u <- c(4,2)
+
+hat_y <- y%*%u/(Norm(u)^2)*u
+residual <- y - hat_y
+
+print(y)
+print(hat_y + residual)
+
+######################################################
+# what is the relationship between hat_y and residuel?
+######################################################
+
+print(round(hat_y %*% residual,3))
+```
+
+```{r}
+# Example 3 (see slide 8)
+# the same problem, but solved without using Norm()
+y <- c(7,6)
+u <- c(4,2)
+
+#+++++++++++++++++++++++++++++++++++++++++++++
+#what would be the physical meaning of this?
+#see I wonder by Sam. =)
+#+++++++++++++++++++++++++++++++++++++++++++++
+print((y%*%u)/(u%*%u))
+
+hat_y <- (y%*%u)/(u%*%u)*u
+
+print(hat_y)
+
+residual <- y - hat_y
+
+#############################################
+# Will this always be zero?
+# Why or why not?
+#############################################
+print(hat_y%*%residual)
+```
+
+```{r}
+# example 6, see slide 13
+# Orthonomal colums
+######################################################
+#  Special property of matrix with orthonormal columns
+######################################################
+
+u1 <- c(1/sqrt(2), 1/sqrt(2), 0)
+u2 <- c(2/3, -2/3, 1/3)
+U <- cbind(u1, u2)
+x <- c(sqrt(2), 3)
+
+##########################
+print("Printing the norm of the vectors")
+print(Norm(u1))
+print(Norm(u2))
+print("++++++++++++++++++++++++++")
+
+print(round(t(U)%*%U,2))
+print("=======================")
+##################################################
+RHS <- U%*%x
+print(U%*%x)
+print("++++++++++++++++++++++++++++++++++++++")
+print(Norm(U%*%x))
+print(Norm(x))
+print("+++++++++++++++++++++++++++++++++++++++")
+##################################################
+print(t(U)%*%RHS)
+print(x)
+```
+
+```{r}
+y <- matrix(c(1,2,5,7), nrow = 4)
+
+A <- matrix(c(1,-1,3,2,1,4,4,1), nrow = 4, byrow = TRUE)
+print(A)
+
+```
+
+
+
+## Discussion
+
+- $\mathbb{U}$ transformed a vector in $R^2$ to $R^3$.
+
+- The size of vector changed, but the norm of the vector did not change. 
+
+- Recall that $\mathbb{A}^{-1}\vec{b}$ only works when $\mathbb{A}$ is singular.
+
+- But notice, when $\mathbb{U}$ has orthonormal columns, we can use $\mathbb{U}^T$ to transform the `RHS` be to row space!
+
+
+```{r}
+#page 351, example 3 
+u1 <- c(2,5,-1)
+u2 <- c(-2,1,1)
+y <- c(1,2,3)
+
+#since the norm is not 1
+#you still need to normalize it
+print(Norm(u1))
+
+U <- cbind(u1,u2)
+
+#using Gram matrix
+print("using gram matrix")
+x_hat<- inv(t(U)%*%U)%*%t(U)%*%y
+print(U%*%x_hat)
+
+# using projection
+print("using projection")
+x1 <- y%*%u1/(Norm(u1)^2)
+x2 <- y%*%u2/(Norm(u2)^2)
+x <- rbind(x1,x2)
+print(U%*%x)
+```
+
+## Orthogonal complement subspace
+
+$$R(\mathbb{A})^{\bot} = N(\mathbb{A})$$
+
+$$C(\mathbb{A})^{\bot} = N(\mathbb{A}^T)$$
+
+
+- Orthogonal basis for subspace $\mathbb{W}$ is a basis for $\mathbb{W}$ that is also an orthogonal set
+
+- $\mathbb{U} \in R^{m by n}$ has orthogonal columns if and only if $\mathbb{U}^{T}\mathbb{U}=\mathbb{I}$
+
+## Angle between vectors 
+
+- This concept can be extended to beyond $R^3$
+
+$$\vec{u}\vec{v}=||\vec{u}||||\vec{v}||cos(\theta)$$
+
+## Difference between projecting onto orthogonal basis vs basis 
+
+- Explain what will be difference
+
+### More on matrix with orthonormal columns
+
+- Orthonormal columns
+
+$$\mathbb{U}\vec{x} = ||\vec{x}||$$
+$$(\mathbb{U}\vec{x})(\mathbb{U}\vec{y}) = \vec{x}\vec{y}$$
+$$(\mathbb{U}\vec{x})(\mathbb{U}\vec{y}) = 0 \text{ if and only if } \vec{x}\vec{y}=0$$
+
+### Orthogonal decomposition
+
+- Projecting $\vec{y}$ on the the orthogonal basis or orthogonal complement subsapce (i.e., this is linear regression)
+
+- Given baiss, you can create orthonormal basis that spans the same space.  `The Gram-schmidt process`
+
+```{r}
+# see the example 1 from Chapter 6
+# page 362
+
+r1 <- c(4,0)
+r2 <- c(0,2)
+r3 <- c(1,1)
+
+#your feature
+A <- rbind(r1,r2,r3)
+
+#your response
+b <- c(2,0,11)
+```
+
+$$\begin{aligned}
+\mathbb{A}\vec{x} &= \vec{b}\\
+\mathbb{A}^T\mathbb{A}\vec{x} &= \mathbb{A}^T\vec{b}\\
+\mathbb{G}\vec{x} &= \mathbb{A}^T\vec{b}\\
+\mathbb{G}^{-1}\mathbb{G}\vec{x} &= \mathbb{G}^{-1}\mathbb{A}^T\vec{b}\\
+\vec{x} &= \mathbb{G}^{-1}\mathbb{A}^T\vec{b}\\
+\end{aligned}$$
+
+- Above set of equations require set of assumptions.  can you identify them?
+
+```{r}
+# see the example 1 from Chapter 6
+# page 362 continue
+
+# this tells you the linear combination of 
+# column vectors of A that will get you y_hat
+
+x <- inv(t(A)%*%A)%*%t(A)%*%b
+
+#########################################
+#what is the physical meaning of this x?
+# x is the least sqaure solution
+#########################################
+print(x)
+print("++++++++++++++++++++++++++++++")
+print(b)
+print("++++++++++++++++++++++++++++++")
+###########################################
+# predict the value
+############################################
+y_hat <-A%*%x 
+print(y_hat)
+print("------------------------------")
+residual <- b - y_hat
+print(residual)
+
+#########################################
+# Why is this value zero? can anyone explain?
+#########################################
+print(round(t(y_hat)%*%residual,4))
+```
+
+```{r}
+# see the example 2 from Chapter 6
+# page 363 continue
+
+v1 <- c(1,1,1,1,1,1)
+v2 <- c(1,1,0,0,0,0)
+v3 <- c(0,0,1,1,0,0)
+v4 <- c(0,0,0,0,1,1)
+b  <- c(-3,-1,0,2,5,1)
+
+A <- cbind(v1,v2,v3,v4)
+
+# Will the gram matrix invertible?
+print(Rank(A))
+print("===================")
+
+# is b in C(A)
+Ab <- cbind(A,b)
+print(Rank(Ab))
+```
+
+\break
+
+## Group exercise or Homework
+
+### 1. Will the gram matrix be invertible?
+
+### 2. 
+
+Is $\vec{b}$ in C($\mathbb{A}$)?
+
+### 3. 
+
+How can we get $\hat{\vec{x}}$?
+
+$$\begin{aligned}
+\mathbb{A}\vec{x} &= \vec{b}\\
+\mathbb{A}^T\mathbb{A}\vec{x} &= \mathbb{A}^T\vec{b}
+\end{aligned}$$
+
+### 4. 
+
+- Note that this process is different from when you have $\infty$ number of solution
+
+```{r}
+###########################################
+# Create gram matrix, but this is singular 
+###########################################
+G <- t(A)%*%A
+
+# creating gram matrix requir multiplying RHS
+# by AT
+RHS <- t(A)%*%b
+
+hyperplane <- cbind(G,RHS)
+rref(hyperplane)
+
+
+```
+
+
+$$\begin{aligned}
+x_1 &= 3 - x_4\\
+x_2 &= -5 + x_4 \\
+x_3 &= -2 + x_4 \\
+x_4 &= \text{free}
+\end{aligned}$$
+
+```{r}
+shift <- c(3,-5,-2,0)
+basis <- c(-1,1,1,1)
+
+#One solution
+print(A%*%shift)
+
+#Another solution
+print("===========================")
+x_another <- shift + 0.01*basis
+print(A%*%x_another)
+```
+
+
+```{r}
+# page 370 example 1
+
+v1 <- c(1,1,1,1)
+v2 <- c(2,5,7,8)
+y <- c(1,2,3,3)
+
+A<- cbind(v1,v2)
+
+plot(v2,y)
+```
+
+```{r}
+# fractions() is function in MASS
+fractions(inv(t(A)%*%A)%*%t(A)%*%y)
+```
+
+## MLE
+
+- See page 317, is the following model linear?
+
+$$ y = \beta_0 + \beta_1 + \beta_2 x^2$$
+
+- In the equation above $\beta_0$ is the constant term, what would be the effect of leaving this constant out of the model?  Explain the effect using the following terms: `hyperplane` and `subspace`
+
+
+\break
+
+# Covarianc matrix
+
+```{r}
+x1 <- matrix(c(1,2,1,4,2),nrow=5)
+x2 <- matrix(c(4,2,13,2,1),nrow=5)
+x3 <- matrix(c(7,8,1,3,4),nrow=5)
+x4 <- matrix(c(8,4,5,5,6),nrow=5)
+
+X <- cbind(x1,x2,x3,x4)
+
+print(X)
+```
+
+### using built in function
+```{r}
+cov(X)
+```
+
+### step by step
+
+```{r}
+rSum <- colSums(X)/5
+mean <- matrix(rep(rSum,5),nrow=5, byrow=TRUE)
+M <- X - mean
+S <- t(M)%*%M/4
+S
+```
+
+Additional problem that estimates sample covariance [LINK](https://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm)
+
+- Think about how $X_i-\bar{x}$ will change if $X_i$ are all centered. Then, 
+$\bar{x}$ will be zero.  
+
+- Can you express the numerator using vector multiplication?
+
+
+
+## Bayes Formula
+
+$$P(A|B) = \frac{P(B|A)P(A)}{P(B|A)P(A) + P(B|A^C)P(A^C)}$$
+
+```{r}
+c.table <- array(data = c(5,15,10,20,35,15), dim=c(3,2),
+                 dimnames = list(Group=c("A","B","C"), 
+                                 TestResult = c("Positive", "Negative")))
+c.table
+```
+
+```{r}
+#condition on X
+c_X <- c.table/rowSums(c.table)
+c_X
+
+#joint
+c_j <- c.table/sum(c.table)
+c_j
+```
+
+Given that `Test Result` is Positive, what will be `P(A|P)`, `P(B|P)`, `P(C|P)`?
+
+
+## Related to CLT
+
+```{r}
+a <- rnorm(25)
+A <- matrix(rnorm(25), nrow=5)
+A
+diag(A)
+```
